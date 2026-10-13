@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MeetFree - 会谈同传助手</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 语言选择首页 -->
+    <div id="view-lang-select" class="view active">
+      <div class="lang-select-container">
+        <div class="logo">🌐 MeetFree</div>
+        <div class="subtitle">面对面会谈 · 实时同传 · AI纪要<br>Face-to-face Meeting · Real-time Translation · AI Summary</div>
+        <div class="lang-select-buttons">
+          <button class="lang-select-btn" data-lang="zh">
+            <span class="lang-flag">🇨🇳</span>
+            <span class="lang-name">中文</span>
+          </button>
+          <button class="lang-select-btn" data-lang="en">
+            <span class="lang-flag">🇬🇧</span>
+            <span class="lang-name">English</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 首页 / 会谈设置 -->
+    <div id="view-setup" class="view">
+      <div class="header">
+        <div class="logo">🌐 MeetFree</div>
+        <div class="subtitle" data-i18n="appSubtitle">面对面会谈 · 实时同传 · AI纪要</div>
+      </div>
+
+      <div class="setup-card">
+        <div class="setup-section">
+          <label class="setup-label" data-i18n="meetingNameLabel">对话名称</label>
+          <input type="text" id="meetingName" class="setup-input" data-i18n-placeholder="meetingNamePlaceholder" placeholder="例如：与英国客户合作洽谈">
+        </div>
+
+        <div class="setup-section">
+          <label class="setup-label" data-i18n="languageSettings">语言设置</label>
+          <div class="lang-row">
+            <div class="lang-box">
+              <span class="lang-label" data-i18n="dialogueLang">对话语言</span>
+              <select id="sourceLang" class="lang-select">
+                <option value="en" selected>英语 English</option>
+                <option value="de">德语 Deutsch</option>
+                <option value="fr">法语 Français</option>
+                <option value="es">西班牙语 Español</option>
+                <option value="ja">日语 日本語</option>
+                <option value="ko">韩语 한국어</option>
+                <option value="ru">俄语 Русский</option>
+                <option value="it">意大利语 Italiano</option>
+                <option value="pt">葡萄牙语 Português</option>
+                <option value="nl">荷兰语 Nederlands</option>
+                <option value="ar">阿拉伯语 العربية</option>
+                <option value="zh">中文 中文</option>
+              </select>
+            </div>
+            <div class="lang-arrow">→</div>
+            <div class="lang-box">
+              <span class="lang-label" data-i18n="translateLang">翻译语言</span>
+              <select id="targetLang" class="lang-select">
+                <option value="zh" selected>中文 中文</option>
+                <option value="en">英语 English</option>
+                <option value="de">德语 Deutsch</option>
+                <option value="fr">法语 Français</option>
+                <option value="es">西班牙语 Español</option>
+                <option value="ja">日语 日本語</option>
+                <option value="ko">韩语 한국어</option>
+                <option value="ru">俄语 Русский</option>
+                <option value="it">意大利语 Italiano</option>
+                <option value="pt">葡萄牙语 Português</option>
+                <option value="nl">荷兰语 Nederlands</option>
+                <option value="ar">阿拉伯语 العربية</option>
+              </select>
+            </div>
+          </div>
+          <div class="setup-hint" style="margin-top:8px;font-size:12px;color:#999;" data-i18n="languageHint">
+            双方都说「对话语言」，系统实时翻译成「翻译语言」，双语记录
+          </div>
+        </div>
+      </div>
+
+      <button id="btnStart" class="btn-primary btn-large" data-i18n="startDialogue">🎙 开始对话</button>
+
+      <div id="connStatus" class="conn-status">
+        <span class="conn-dot"></span>
+        <span id="connStatusText" data-i18n="connChecking">正在检查服务状态…</span>
+      </div>
+
+      <div class="history-section">
+        <div class="history-header">
+          <span data-i18n="historyMeetings">📋 历史会谈</span>
+          <button id="btnRefreshHistory" class="btn-text" data-i18n="refresh">刷新</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <div class="history-empty" data-i18n="noHistory">暂无历史会谈</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 会谈中 -->
+    <div id="view-meeting" class="view">
+      <div class="meeting-header">
+        <div class="meeting-status">
+          <span id="recordingDot" class="recording-dot"></span>
+          <span id="meetingTimer">00:00</span>
+        </div>
+        <div id="meetingTitleDisplay" class="meeting-title" data-i18n="inMeeting">会谈中</div>
+        <button id="btnEndMeeting" class="btn-end" data-i18n="end">结束</button>
+      </div>
+
+      <!-- 连接中断横幅（仅在真实断线时出现，预连接切换时不会触发） -->
+      <div id="connBanner" class="conn-banner" style="display:none">
+        <span class="conn-banner-dot"></span>
+        <span id="connBannerText" data-i18n="connLost">连接中断，正在恢复…</span>
+      </div>
+
+      <!-- 当前语言显示（可点击切换） -->
+      <div id="langDisplay" class="lang-display" title="点击切换翻译语言">
+        <span id="langIcon">🌐</span>
+        <span id="langDirection">英语 → 中文</span>
+        <span class="lang-change-hint" data-i18n="clickToSwitch">点击切换</span>
+      </div>
+
+      <!-- 语言选择弹窗（可同时选择对话语言和翻译语言） -->
+      <div id="langModal" class="lang-modal" style="display:none">
+        <div class="lang-modal-content">
+          <div class="lang-modal-title" data-i18n="switchLanguage">切换翻译语言</div>
+          <div class="lang-modal-section">
+            <div class="lang-modal-section-title" data-i18n="dialogueLangBoth">对话语言（双方都说）</div>
+            <div class="lang-modal-list" id="langModalSourceList"></div>
+          </div>
+          <div class="lang-modal-divider">⇅</div>
+          <div class="lang-modal-section">
+            <div class="lang-modal-section-title" data-i18n="translateLangListen">翻译语言（我想听）</div>
+            <div class="lang-modal-list" id="langModalTargetList"></div>
+          </div>
+          <button class="lang-modal-close" id="btnCloseLangModal" data-i18n="cancel">取消</button>
+        </div>
+      </div>
+
+      <!-- 说话人标记 -->
+      <div class="speaker-toggle">
+        <button id="btnSpeakerOther" class="speaker-btn active" data-speaker="other">🗣 <span data-i18n="otherSpeaker">对方说</span></button>
+        <button id="btnSpeakerMe" class="speaker-btn" data-speaker="me">🎙 <span data-i18n="meSpeaker">我说</span></button>
+      </div>
+      <div class="volume-meter">
+        <div class="volume-bar" id="volumeBar"></div>
+        <span class="volume-label" id="volumeLabel" data-i18n="micNormal">麦克风正常</span>
+      </div>
+
+      <!-- 双语字幕实时滚动区域 -->
+      <div class="transcript-scroll" id="transcriptScroll">
+        <div id="transcriptList" class="transcript-list">
+          <div class="transcript-empty" data-i18n="waitingSpeech">等待说话，双语记录将显示在这里...</div>
+        </div>
+      </div>
+
+      <div class="meeting-controls">
+        <button id="btnPause" class="ctrl-btn">⏸<span data-i18n="pause">暂停</span></button>
+        <button id="btnMute" class="ctrl-btn">🔊<span data-i18n="mute">静音</span></button>
+      </div>
+    </div>
+
+    <!-- 会谈结果 / 纪要 -->
+    <div id="view-result" class="view">
+      <div class="result-header">
+        <button id="btnBackHome" class="btn-back" data-i18n="back">← 返回</button>
+        <div class="result-title" data-i18n="dialogueRecord">对话记录</div>
+        <div style="width:60px"></div>
+      </div>
+
+      <div class="result-info">
+        <div id="resultMeetingName" class="result-name"></div>
+        <div id="resultMeta" class="result-meta"></div>
+      </div>
+
+      <div class="result-actions">
+        <button id="btnGenerateSummary" class="btn-primary" data-i18n="generateAISummary">✨ 生成AI总结</button>
+        <button id="btnExport" class="btn-secondary" data-i18n="exportRecord">📥 导出记录</button>
+      </div>
+
+      <div id="summaryLoading" class="loading-box" style="display:none">
+        <div class="spinner"></div>
+        <span data-i18n="generatingSummary">AI正在生成会谈总结，请稍候...</span>
+      </div>
+
+      <div id="summaryContent" class="summary-content" style="display:none">
+        <div class="summary-header">
+          <div class="summary-title" data-i18n="aiSummary">🤖 AI智能总结</div>
+          <button id="btnCopySummary" class="btn-copy" data-i18n="copy">📋 复制</button>
+        </div>
+        <div id="summaryText" class="summary-text"></div>
+      </div>
+
+      <div class="transcript-section">
+        <div class="section-title" data-i18n="bilingualRecord">📝 双语完整记录</div>
+        <div id="resultTranscript" class="result-transcript"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
